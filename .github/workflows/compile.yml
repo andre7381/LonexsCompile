@@ -16,11 +16,12 @@ jobs:
         uses: knryuu/pawn-compiler-action@v1
 
       - name: Compile lonexs.pwn
-        run: |
-          ${{ steps.pawncc.outputs.pawncc }} \
-            gamemodes/lonexs.pwn \
-            -iinclude \
-            -ogamemodes/lonexs.amx
+  run: |
+    export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/pawncc/lib:$LD_LIBRARY_PATH"
+    "$GITHUB_WORKSPACE/pawncc/bin/pawncc" \
+      gamemodes/lonexs.pwn \
+      -iinclude \
+      -ogamemodes/lonexs.amx
 
       - name: Upload AMX
         uses: actions/upload-artifact@v4
