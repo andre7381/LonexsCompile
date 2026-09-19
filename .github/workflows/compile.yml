@@ -1,0 +1,34 @@
+name: Compile Pawn
+
+on:
+  workflow_dispatch:
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Pawn compiler
+        run: |
+          git clone https://github.com/pawn-lang/compiler.git
+          cd compiler/source/compiler
+          mkdir build
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release
+          cmake --build . --config Release
+
+      - name: Compile lonexs.pwn
+        run: |
+          ./compiler/source/compiler/build/pawncc \
+            gamemodes/lonexs.pwn \
+            -iinclude \
+            -ogamemodes/lonexs.amx
+
+      - name: Upload AMX
+        uses: actions/upload-artifact@v4
+        with:
+          name: lonexs-amx
+          path: gamemodes/lonexs.amx
