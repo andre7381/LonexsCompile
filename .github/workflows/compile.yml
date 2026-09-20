@@ -12,19 +12,19 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Pawn compiler
-        id: pawncc
-        uses: knryuu/pawn-compiler-action@v1
+        run: |
+          git clone --depth 1 https://github.com/pawn-lang/compiler.git pawn-compiler
+          cd pawn-compiler
+          make
 
       - name: Compile lonexs.pwn
         shell: bash
         run: |
-          export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/pawncc/lib:$LD_LIBRARY_PATH"
-
-          "$GITHUB_WORKSPACE/pawncc/bin/pawncc" \
+          ./pawn-compiler/pawncc \
             gamemodes/lonexs.pwn \
             -iinclude \
-            -O0 \
-            -Z \
+            -O1 \
+            -d2 \
             -ogamemodes/lonexs.amx
 
       - name: Check AMX
