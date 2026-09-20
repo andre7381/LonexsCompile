@@ -15,12 +15,6 @@ jobs:
         id: pawncc
         uses: knryuu/pawn-compiler-action@v1
 
-      - name: Show compiler version
-        shell: bash
-        run: |
-          export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/pawncc/lib:$LD_LIBRARY_PATH"
-          "$GITHUB_WORKSPACE/pawncc/bin/pawncc" -v
-
       - name: Compile lonexs.pwn
         shell: bash
         run: |
@@ -36,7 +30,7 @@ jobs:
       - name: Check AMX
         shell: bash
         run: |
-          echo "=== AMX files ==="
+          echo "=== AMX file ==="
           ls -lh gamemodes/lonexs.amx
           file gamemodes/lonexs.amx
 
@@ -45,4 +39,3 @@ jobs:
         with:
           name: lonexs-amx
           path: gamemodes/lonexs.amx
-          
