@@ -11,16 +11,36 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Pawn compiler
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-multilib g++-multilib cmake make git
+
+      - name: Build Pawn compiler
+        shell: bash
         run: |
           git clone --depth 1 https://github.com/pawn-lang/compiler.git pawn-compiler
+
           cd pawn-compiler
+
+          mkdir build
+          cd build
+
+          cmake ../source/compiler \
+            -DCMAKE_C_FLAGS="-m32" \
+            -DCMAKE_BUILD_TYPE=Release
+
           make
+
+      - name: Show compiler version
+        shell: bash
+        run: |
+          ./pawn-compiler/build/pawncc -h | head -20
 
       - name: Compile lonexs.pwn
         shell: bash
         run: |
-          ./pawn-compiler/pawncc \
+          ./pawn-compiler/build/pawncc \
             gamemodes/lonexs.pwn \
             -iinclude \
             -O1 \
