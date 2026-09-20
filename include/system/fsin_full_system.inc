@@ -1,5 +1,5 @@
 // ============================================================================
-// SIME RUSSIA � FSIN FULL SYSTEM EXPORT
+// SIME RUSSIA — FSIN FULL SYSTEM EXPORT
 // Extracted/assembled from SIME_RUSSIA_MECHANIC_CENTER_V5_ACTIONS_FULL_FINAL
 // Encoding of fsin_full_system.inc: Windows-1251 (CP1251)
 //
@@ -65,12 +65,12 @@ new const g_FsinFullMaleSkins[10] = {32,4,26,26,26,26,26,26,26,26};
 new const Float:g_FsinFullSpawn[4] = {-1876.63,-2727.15,8.58,227.22};
 new const g_FsinFullRankNames[10][60] =
 {
-    "�������", "��������", "�������", "��������", "���������",
-    "���������", "�������", "�����", "������������", "���������"
+    "Ðÿäîâîé", "Åôðåéòîð", "Ñåðæàíò", "Ñòàðøèíà", "Ïðàïîðùèê",
+    "Ëåéòåíàíò", "Êàïèòàí", "Ìàéîð", "Ïîäïîëêîâíèê", "Ïîëêîâíèê"
 };
 new const g_FsinFullRankWages[10] = {1950,2540,4500,5700,6325,7950,8700,10550,12000,16000};
 
-// Current FSIN fleet � exact six-car configuration from fraction_gui_adapter.pwn.
+// Current FSIN fleet — exact six-car configuration from fraction_gui_adapter.pwn.
 new const g_FsinFullFleetModels[FSIN_FULL_FLEET_COUNT] =
 {
     456, 413, 2555, 2547, 28664, 2562
@@ -81,9 +81,9 @@ new const g_FsinFullFleetMinRank[FSIN_FULL_FLEET_COUNT] =
 };
 new const g_FsinFullFleetNames[FSIN_FULL_FLEET_COUNT][48] =
 {
-    "�������",
-    "��� 3221",
-    "������",
+    "Àâòîçàê",
+    "ÃÀÇ 3221",
+    "Ãðàíòà",
     "LC 200",
     "Hyundai Grandeur",
     "UAZ Patriot"
@@ -156,8 +156,8 @@ new bool:g_FsinFullSawmillTDReady[MAX_PLAYERS];
 // --------------------------------------------------------------------------
 stock FsinFull_CreateScene()
 {
-    CreateDynamic3DTextLabel("{FF5252}�\t{ffffff}������ �C��\t{FF5252}�\n{ffffff}��������� ��� ��������{FF5252}", 0xFF5252FF, -1823.55,-2633.54,10.38, 15.0);
-    CreateDynamic3DTextLabel("{FF5252}�\t{ffffff}������ �C��\t{FF5252}�\n{ffffff}��������� ��� ��������{FF5252}", 0xFF5252FF, -1820.60,-2650.97,12.70, 10.0);
+    CreateDynamic3DTextLabel("{FF5252}«\t{ffffff}Âîðîòà ÔCÈÍ\t{FF5252}»\n{ffffff}Çàåçæàéòå äëÿ îòêðûòèÿ{FF5252}", 0xFF5252FF, -1823.55,-2633.54,10.38, 15.0);
+    CreateDynamic3DTextLabel("{FF5252}«\t{ffffff}Âîðîòà ÔCÈÍ\t{FF5252}»\n{ffffff}Çàåçæàéòå äëÿ îòêðûòèÿ{FF5252}", 0xFF5252FF, -1820.60,-2650.97,12.70, 10.0);
 
     g_FsinFullGateArea[0] = CreateDynamicSphere(-1823.66,-2633.54,8.58,10.0);
     g_FsinFullGateArea[1] = CreateDynamicSphere(-1820.49,-2651.36,10.90,15.0);
@@ -186,15 +186,15 @@ stock FsinFull_CreateScene()
     CreateDynamicObject(1800,-2005.371337,-1490.781982,1751.000000,0.0,0.0,327.187438,6,1);
     CreateDynamicObject(1800,-2005.318237,-1488.515625,1751.000000,0.0,0.0,86.815521,6,1);
     CreateDynamicObject(1800,-2001.401367,-1493.826416,1751.000000,0.0,0.0,265.736175,6,1);
-    CreateDynamic3DTextLabel("{66CCFF}������� ����\n{FFFFFF}��������� � ����� ��� �������",0xFFFFFFFF,-2004.620239,-1492.151245,1752.200000,15.0,6,1);
+    CreateDynamic3DTextLabel("{66CCFF}Ëàçàðåò ÔÑÈÍ\n{FFFFFF}Ïîäîéäèòå ê êîéêå äëÿ ëå÷åíèÿ",0xFFFFFFFF,-2004.620239,-1492.151245,1752.200000,15.0,6,1);
     g_FsinFullHrActor = CreateActor(81,-1817.008300,-2631.807617,7.590855,2.969990);
-    Create3DTextLabel("{ffff00}� ����� ������ ���� �\n{ffffff}��������� ��� ��������������", -1, -1817.008300,-2631.807617,7.590855, 15.0, 0);
+    Create3DTextLabel("{ffff00}« Îòäåë êàäðîâ ÔÑÈÍ »\n{ffffff}Ïîäîéäèòå äëÿ âçàèìîäåéñòâèÿ", -1, -1817.008300,-2631.807617,7.590855, 15.0, 0);
 
     // Visual NPC/label present in the donor FSIN scene. No separate interaction
     // implementation for this actor was found in the source, so it is preserved as-is.
     g_FsinFullIglaActor = CreateActor(57,-1721.147827,-2815.024169,7.582671,132.815338);
-    Create3DTextLabel("{ffff00}� ���� �\n{ffffff}��������� �����\n��� ��������������", -1, -1721.147827,-2815.024169,7.582671, 15.0, 0);
-    Create3DTextLabel("{ffff00}����� ������\n{ffffff}��������� ����� ��� ��������������", -1, -1698.703979,-2698.262695,1499.500000, 15.0, 6);
+    Create3DTextLabel("{ffff00}« Èãëà »\n{ffffff}Ïîäîéäèòå áëèæå\näëÿ âçîèìîäåéñòâèÿ", -1, -1721.147827,-2815.024169,7.582671, 15.0, 0);
+    Create3DTextLabel("{ffff00}Îáùèé òàéíèê\n{ffffff}Ïîäîéäèòå áëèæå äëÿ âçîèìîäåéñòâèÿ", -1, -1698.703979,-2698.262695,1499.500000, 15.0, 6);
     return 1;
 }
 
@@ -202,15 +202,15 @@ stock FsinFull_CreatePickups()
 {
     // Wardrobe / workday.
     g_FsinFullWardrobePickup = CreatePickup(1275,23,-1875.208618,-2722.175048,8.624625,0);
-    CreateDynamic3DTextLabel("{FF5252}<<<����������>>>\n{FFFFFF}��������� ��� ��������������", 0x3399FFFF, -1875.208618,-2722.175048,9.424625,10.0);
+    CreateDynamic3DTextLabel("{FF5252}<<<Ðàçäåâàëêà>>>\n{FFFFFF}Ïîäîéäèòå äëÿ âçàèìîäåéñòâèÿ", 0x3399FFFF, -1875.208618,-2722.175048,9.424625,10.0);
 
     // Fleet/autopark.
     g_FsinFullFleetPickup = CreatePickup(19131,23,-1857.56,-2776.02,7.58,0);
-    CreateDynamic3DTextLabel("{fcd000}(����)\n\n{FFFFFF}��������� ��� ��������������\n� ���������� �����������", -1, -1857.56,-2776.02,7.58,15.0);
+    CreateDynamic3DTextLabel("{fcd000}(ÔÑÈÍ)\n\n{FFFFFF}Ïîäîéäèòå äëÿ âçàèìîäåéñòâèÿ\nñ àâòîïàðêîì îðãàíèçàöèè", -1, -1857.56,-2776.02,7.58,15.0);
 
-    // Armory � exact donor position.
+    // Armory — exact donor position.
     g_FsinFullArmoryPickup = CreatePickup(1239,23,-1877.71,-2735.64,7.58,0);
-    CreateDynamic3DTextLabel("{3399FF}- ��������� ����� -\n{FFFFFF}����", 0x3399FFFF, -1877.71,-2735.64,9.08,8.0);
+    CreateDynamic3DTextLabel("{3399FF}- Îðóæåéíûé ñêëàä -\n{FFFFFF}ÔÑÈÍ", 0x3399FFFF, -1877.71,-2735.64,9.08,8.0);
 
     // FSIN lazaret beds use the common hospital interaction/healing system.
     g_FsinFullBedArea[0] = CreateDynamicSphere(-2005.465087,-1493.152709,1751.548583,2.0,6,1);
@@ -220,29 +220,29 @@ stock FsinFull_CreatePickups()
 
     // Main entrance: exterior world 0 <-> FSIN interior 1, virtual world 6.
     g_FsinFullEntrancePickup = CreatePickup(1318,23,-1747.629028,-2835.377197,8.033645,0);
-    Create3DTextLabel("{FF5252}� ���� �� ���� �",-1,-1747.629028,-2835.377197,9.033645,15.0,0);
+    Create3DTextLabel("{FF5252}« Âõîä âî ÔÑÈÍ »",-1,-1747.629028,-2835.377197,9.033645,15.0,0);
     g_FsinFullExitPickup = CreatePickup(1318,23,-1816.255615,-2735.155273,1501.040039,6);
-    Create3DTextLabel("{FF5252}� ����� �� ���� �",-1,-1816.255615,-2735.155273,1502.040039,15.0,6);
+    Create3DTextLabel("{FF5252}« Âûõîä èç ÔÑÈÍ »",-1,-1816.255615,-2735.155273,1502.040039,15.0,6);
 
-    // Prison/lazaret/sawmill portals � exact donor pickups and labels.
+    // Prison/lazaret/sawmill portals — exact donor pickups and labels.
     g_FsinFullLazaretIn = CreatePickup(1318,23,-1801.931030,-2757.826660,1501.000000,-1);
     g_FsinFullLazaretOut = CreatePickup(1318,23,-2003.557861,-1506.610107,1751.005249,-1);
-    CreateDynamic3DTextLabel("����� �� ��������",0xFFFF00FF,-2003.557861,-1506.610107,1752.005249,10.0);
+    CreateDynamic3DTextLabel("Âûõîä èç ëàçàðåòà",0xFFFF00FF,-2003.557861,-1506.610107,1752.005249,10.0);
 
     g_FsinFullCameraIn = CreatePickup(19132,23,-1801.861206,-2766.176757,1501.000000,-1);
-    CreateDynamic3DTextLabel("���� � ������",0xFFFF00FF,-1801.861206,-2766.176757,1502.000000,10.0);
+    CreateDynamic3DTextLabel("Âõîä â êàìåðó",0xFFFF00FF,-1801.861206,-2766.176757,1502.000000,10.0);
     g_FsinFullCameraOut = CreatePickup(19132,23,-1697.535400,-2702.098876,1499.500000,-1);
-    CreateDynamic3DTextLabel("����� �� ������",0xFFFF00FF,-1697.535400,-2702.098876,1500.500000,10.0);
+    CreateDynamic3DTextLabel("Âûõîä èç êàìåðû",0xFFFF00FF,-1697.535400,-2702.098876,1500.500000,10.0);
 
     g_FsinFullSawmillIn = CreatePickup(1318,23,-1798.070190,-2759.390869,1501.000000,-1);
-    CreateDynamic3DTextLabel("���� � ������� ����������",0xFFFF00FF,-1798.070190,-2759.390869,1502.000000,10.0);
+    CreateDynamic3DTextLabel("Âõîä â êîìíàòó ëåñîïèëüíè",0xFFFF00FF,-1798.070190,-2759.390869,1502.000000,10.0);
     g_FsinFullSawmillOut = CreatePickup(1318,23,-1887.860717,-2609.774902,1501.233764,-1);
-    CreateDynamic3DTextLabel("����� �� ������� ����������",0xFFFF00FF,-1887.860717,-2609.774902,1502.233764,10.0);
+    CreateDynamic3DTextLabel("Âûõîä èç êîìíàòû ëåñîïèëüíè",0xFFFF00FF,-1887.860717,-2609.774902,1502.233764,10.0);
     for(new i; i < FSIN_FULL_SAWMILL_COUNT; i++)
     {
         g_FsinFullSawmillUser[i] = INVALID_PLAYER_ID;
         g_FsinFullSawmillArea[i] = CreateDynamicSphere(g_FsinFullSawmillPos[i][0],g_FsinFullSawmillPos[i][1],g_FsinFullSawmillPos[i][2],2.5,6,1);
-        g_FsinFullSawmillLabel[i] = CreateDynamic3DTextLabel("{D99B45}����������� ������\n{FFFFFF}����������� ������ ��������������",-1,g_FsinFullSawmillPos[i][0],g_FsinFullSawmillPos[i][1],g_FsinFullSawmillPos[i][2]+0.65,12.0,INVALID_PLAYER_ID,INVALID_VEHICLE_ID,0,6,1);
+        g_FsinFullSawmillLabel[i] = CreateDynamic3DTextLabel("{D99B45}ËÅÑÎÏÈËÜÍÛÉ ÑÒÀÍÎÊ\n{FFFFFF}Èñïîëüçóéòå êíîïêó âçàèìîäåéñòâèÿ",-1,g_FsinFullSawmillPos[i][0],g_FsinFullSawmillPos[i][1],g_FsinFullSawmillPos[i][2]+0.65,12.0,INVALID_PLAYER_ID,INVALID_VEHICLE_ID,0,6,1);
     }
     return 1;
 }
@@ -342,7 +342,7 @@ stock FsinFull_GateOpen(playerid, gate)
     if(gate < 0 || gate > 1) return 0;
     if(GetPlayerTeamEx(playerid) != FSIN_FULL_TEAM_ID)
     {
-        ShowNotificationNew(playerid,2,5,-1,-1,"������ � ������� �������� ������ ����������� ����.","");
+        ShowNotificationNew(playerid,2,5,-1,-1,"Äîñòóï ê âîðîòàì ðàçðåø¸í òîëüêî ñîòðóäíèêàì ÔÑÈÍ.","");
         return 1;
     }
     if(g_FsinFullGateCloseTimer[gate] != -1)
@@ -359,7 +359,7 @@ stock FsinFull_GateOpen(playerid, gate)
 
     g_FsinFullGateOpen[gate] = true;
     g_FsinFullGateCloseTimer[gate] = SetTimerEx("FsinFull_GateClose",7000,false,"i",gate);
-    ShowNotificationNew(playerid,3,4,-1,-1,"������ ���� �������.","");
+    ShowNotificationNew(playerid,3,4,-1,-1,"Âîðîòà ÔÑÈÍ îòêðûòû.","");
     return 1;
 }
 
@@ -381,16 +381,16 @@ stock FsinFull_OnEnterDynamicArea(playerid, areaid)
 
     if(GetPlayerTeamEx(playerid) != FSIN_FULL_TEAM_ID)
     {
-        ShowNotificationNew(playerid,2,5,-1,-1,"�� �� ��������� ����.","");
+        ShowNotificationNew(playerid,2,5,-1,-1,"Âû íå ñîòðóäíèê ÔÑÈÍ.","");
         return 1;
     }
     if(GetPlayerState(playerid) == PLAYER_STATE_DRIVER)
-        ShowNotificationNew(playerid,4,6,-1,-1,"�����������, ����� ������� ������ ����.","");
+        ShowNotificationNew(playerid,4,6,-1,-1,"Ïîñèãíàëüòå, ÷òîáû îòêðûòü âîðîòà ÔÑÈÍ.","");
     else
     {
         SetPVarInt(playerid,"sime_context_hint",3);
         ToggleInteractionWindow(playerid,true);
-        ShowNotificationNew(playerid,4,6,FSIN_FULL_GATE_NOTIFY_ID,gate,"������ ����","�������");
+        ShowNotificationNew(playerid,4,6,FSIN_FULL_GATE_NOTIFY_ID,gate,"Âîðîòà ÔÑÈÍ","Îòêðûòü");
     }
     return 1;
 }
@@ -439,4 +439,4 @@ stock FsinFull_GateHandleKeys(playerid,newkeys,oldkeys)
 
 // --------------------------------------------------------------------------
 // HR / recruitment
-// -------------------------------
+// ---------------------------------------------
