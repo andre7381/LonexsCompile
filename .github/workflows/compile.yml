@@ -32,11 +32,6 @@ jobs:
 
           make
 
-      - name: Show compiler version
-        shell: bash
-        run: |
-          ./pawn-compiler/build/pawncc -h | head -20
-
       - name: Compile lonexs.pwn
         shell: bash
         run: |
@@ -44,6 +39,7 @@ jobs:
             gamemodes/lonexs.pwn \
             -iinclude \
             -O1 \
+            -Z \
             -d2 \
             -ogamemodes/lonexs.amx
 
