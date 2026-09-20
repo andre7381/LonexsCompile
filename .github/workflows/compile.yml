@@ -20,28 +20,21 @@ jobs:
         run: |
           echo "=== 43987 ==="
           sed -n '43980,43995p' gamemodes/lonexs.pwn
-
           echo "=== 44101 ==="
           sed -n '44094,44108p' gamemodes/lonexs.pwn
-
           echo "=== 46129 ==="
           sed -n '46122,46136p' gamemodes/lonexs.pwn
-
           echo "=== 95020 ==="
           sed -n '95014,95027p' gamemodes/lonexs.pwn
-
           echo "=== 99466 ==="
           sed -n '99460,99473p' gamemodes/lonexs.pwn
-
           echo "=== 112194 ==="
           sed -n '112190,112210p' gamemodes/lonexs.pwn
-
           echo "=== 115235 ==="
           sed -n '115231,115251p' gamemodes/lonexs.pwn
-
           echo "=== 135348 ==="
           sed -n '135342,135353p' gamemodes/lonexs.pwn
-        
+
       - name: Compile lonexs.pwn
         shell: bash
         run: |
@@ -62,10 +55,3 @@ jobs:
         with:
           name: lonexs-amx
           path: gamemodes/lonexs.amx
-
-      - name: Upload AMX
-        uses: actions/upload-artifact@v4
-        with:
-          name: lonexs-amx
-          path: gamemodes/lonexs.amx
-          
