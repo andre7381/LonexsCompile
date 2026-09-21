@@ -22,7 +22,6 @@ jobs:
           git clone --depth 1 https://github.com/pawn-lang/compiler.git pawn-compiler
 
           cd pawn-compiler
-
           mkdir build
           cd build
 
@@ -30,17 +29,25 @@ jobs:
             -DCMAKE_C_FLAGS="-m32" \
             -DCMAKE_BUILD_TYPE=Release
 
-          make
+          make -j2
 
       - name: Compile lonexs.pwn
         shell: bash
         run: |
+          ulimit -s unlimited
+          ulimit -c unlimited
+
+          echo "=== Pawn compiler ==="
+          ./pawn-compiler/build/pawncc --version || true
+
+          echo "=== Starting compilation ==="
+
           ./pawn-compiler/build/pawncc \
             gamemodes/lonexs.pwn \
             -iinclude \
-            -O1 \
+            -O0 \
             -Z \
-            -d2 \
+            -d0 \
             -ogamemodes/lonexs.amx
 
       - name: Check AMX
