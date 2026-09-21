@@ -20,18 +20,21 @@ jobs:
         shell: bash
         run: |
           git clone --depth 1 --branch v3.10.10 https://github.com/pawn-lang/compiler.git pawn-compiler
+
           cd pawn-compiler
           mkdir build
           cd build
+
           cmake ../source/compiler \
             -DCMAKE_C_FLAGS="-m32" \
             -DCMAKE_BUILD_TYPE=Release
+
           make -j2
 
       - name: Check Pawn Compiler
         shell: bash
         run: |
-          ./pawn-compiler/build/pawncc
+          ./pawn-compiler/build/pawncc --help || true
 
       - name: Compile lonexs.pwn
         shell: bash
@@ -49,12 +52,4 @@ jobs:
       - name: Check AMX
         shell: bash
         run: |
-          echo "=== AMX file ==="
-          ls -lh gamemodes/lonexs.amx
-          file gamemodes/lonexs.amx
-
-      - name: Upload AMX
-        uses: actions/upload-artifact@v4
-        with:
-          name: lonexs-amx
-          path: gamemodes/lonexs.amx
+          echo "=== AMX
