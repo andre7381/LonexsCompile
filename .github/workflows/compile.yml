@@ -16,10 +16,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gcc-multilib g++-multilib cmake make git
 
-      - name: Build Pawn compiler 3.10.11
+      - name: Build Pawn Compiler 3.10.10
         shell: bash
         run: |
-          git clone --depth 1 https://github.com/openmultiplayer/compiler.git pawn-compiler
+          git clone --depth 1 --branch 3.10.10 https://github.com/pawn-lang/compiler.git pawn-compiler
           cd pawn-compiler
           mkdir build
           cd build
@@ -28,16 +28,22 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release
           make -j2
 
+      - name: Check Pawn Compiler
+        shell: bash
+        run: |
+          ./pawn-compiler/build/pawncc
+
       - name: Compile lonexs.pwn
         shell: bash
         run: |
           ulimit -s unlimited
+
           ./pawn-compiler/build/pawncc \
             gamemodes/lonexs.pwn \
             -iinclude \
-            -O0 \
+            -O1 \
             -Z \
-            -d0 \
+            -d2 \
             -ogamemodes/lonexs.amx
 
       - name: Check AMX
@@ -50,4 +56,5 @@ jobs:
       - name: Upload AMX
         uses: actions/upload-artifact@v4
         with:
-          name: lonexs
+          name: lonexs-amx
+          path: gamemodes/lonexs.amx
