@@ -19,13 +19,17 @@ jobs:
       - name: Build Pawn Compiler 3.10.10
         shell: bash
         run: |
-          git clone --depth 1 --branch v3.10.10 https://github.com/pawn-lang/compiler.git pawn-compiler
+          git clone --depth 1 --branch v3.10.10 \
+            https://github.com/pawn-lang/compiler.git pawn-compiler
+
           cd pawn-compiler
           mkdir build
           cd build
+
           cmake ../source/compiler \
             -DCMAKE_C_FLAGS="-m32" \
             -DCMAKE_BUILD_TYPE=Release
+
           make -j2
 
       - name: Check Pawn Compiler
@@ -37,8 +41,10 @@ jobs:
         shell: bash
         run: |
           ulimit -s unlimited
+
           ./pawn-compiler/build/pawncc \
             gamemodes/lonexs.pwn \
+            -ipawno/include \
             -iinclude \
             -O1 \
             -Z \
