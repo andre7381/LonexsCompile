@@ -1,33 +1,33 @@
-name: Build lonexs
- 
+ name: Build lonexs
+
 on:
   push:
     branches: [main, master]
   pull_request:
   workflow_dispatch:
- 
+
 jobs:
   build:
     runs-on: ubuntu-latest
- 
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
- 
+
       # pawncc 32-битный, ему нужны 32-битные библиотеки
       - name: Install 32-bit libs
         run: |
           sudo dpkg --add-architecture i386
           sudo apt-get update
           sudo apt-get install -y libc6:i386
- 
+
       - name: Download pawncc 3.10.10
         run: |
           curl -fL -o pawncc.tar.gz \
             https://github.com/pawn-lang/compiler/releases/download/v3.10.10/pawnc-3.10.10-linux.tar.gz
           mkdir pawncc
           tar -xzf pawncc.tar.gz -C pawncc --strip-components=1
- 
+
       # Сторонние инклуды, которых нет в архиве, нужно положить в include/
       - name: Check required includes
         run: |
@@ -39,7 +39,7 @@ jobs:
             fi
           done
           exit 0
- 
+
       - name: Compile
         run: |
           export LD_LIBRARY_PATH="$PWD/pawncc/lib:$LD_LIBRARY_PATH"
@@ -49,11 +49,11 @@ jobs:
             -o../build/lonexs.amx \
             -i../include \
             -i../pawncc/include \
-            -;+ -(+ -d3
- 
+            '-;+' '-(+' -d3
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: lonexs-amx
           path: build/lonexs.amx
- 
+          
