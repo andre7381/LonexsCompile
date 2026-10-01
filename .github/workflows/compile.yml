@@ -1,65 +1,59 @@
-name: Compile Pawn
-
+name: Build lonexs
+ 
 on:
+  push:
+    branches: [main, master]
+  pull_request:
   workflow_dispatch:
-
+ 
 jobs:
-  compile:
+  build:
     runs-on: ubuntu-latest
-
+ 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Install dependencies
+ 
+      # pawncc 32-битный, ему нужны 32-битные библиотеки
+      - name: Install 32-bit libs
         run: |
+          sudo dpkg --add-architecture i386
           sudo apt-get update
-          sudo apt-get install -y gcc-multilib g++-multilib cmake make git
-
-      - name: Build Pawn Compiler 3.10.10
-        shell: bash
+          sudo apt-get install -y libc6:i386
+ 
+      - name: Download pawncc 3.10.10
         run: |
-          git clone --depth 1 --branch v3.10.10 \
-            https://github.com/pawn-lang/compiler.git pawn-compiler
-
-          cd pawn-compiler
-          mkdir build
-          cd build
-
-          cmake ../source/compiler \
-            -DCMAKE_C_FLAGS="-m32" \
-            -DCMAKE_BUILD_TYPE=Release
-
-          make -j2
-
-      - name: Check Pawn Compiler
-        shell: bash
+          curl -fL -o pawncc.tar.gz \
+            https://github.com/pawn-lang/compiler/releases/download/v3.10.10/pawnc-3.10.10-linux.tar.gz
+          mkdir pawncc
+          tar -xzf pawncc.tar.gz -C pawncc --strip-components=1
+ 
+      # Сторонние инклуды, которых нет в архиве, нужно положить в include/
+      - name: Check required includes
         run: |
-          ./pawn-compiler/build/pawncc --help || true
-
-      - name: Compile lonexs.pwn
-        shell: bash
+          missing=0
+          for f in mxINI voicechat brnotification customhud customtune sampvoice pawnraknet a_samp a_http; do
+            if [ ! -f "include/$f.inc" ] && [ ! -f "pawncc/include/$f.inc" ]; then
+              echo "::warning::Нет include/$f.inc"
+              missing=1
+            fi
+          done
+          exit 0
+ 
+      - name: Compile
         run: |
-          ulimit -s unlimited
-
-          ./pawn-compiler/build/pawncc \
-            gamemodes/lonexs.pwn \
-            -ipawno/include \
-            -iinclude \
-            -O1 \
-            -Z \
-            -d2 \
-            -ogamemodes/lonexs.amx
-
-      - name: Check AMX
-        shell: bash
-        run: |
-          echo "=== AMX file ==="
-          ls -lh gamemodes/lonexs.amx
-          file gamemodes/lonexs.amx
-
-      - name: Upload AMX
+          export LD_LIBRARY_PATH="$PWD/pawncc/lib:$LD_LIBRARY_PATH"
+          mkdir -p build
+          cd gamemodes
+          ../pawncc/bin/pawncc lonexs.pwn \
+            -o../build/lonexs.amx \
+            -i../include \
+            -i../pawncc/include \
+            -;+ -(+ -d3
+ 
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: lonexs-amx
-          path: gamemodes/lonexs.amx
+          path: build/lonexs.amx
+ 
