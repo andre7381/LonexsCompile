@@ -1,4 +1,4 @@
- name: Build lonexs
+name: Build lonexs
 
 on:
   push:
@@ -14,7 +14,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # pawncc 32-битный, ему нужны 32-битные библиотеки
       - name: Install 32-bit libs
         run: |
           sudo dpkg --add-architecture i386
@@ -28,17 +27,13 @@ jobs:
           mkdir pawncc
           tar -xzf pawncc.tar.gz -C pawncc --strip-components=1
 
-      # Сторонние инклуды, которых нет в архиве, нужно положить в include/
       - name: Check required includes
         run: |
-          missing=0
           for f in mxINI voicechat brnotification customhud customtune sampvoice pawnraknet a_samp a_http; do
             if [ ! -f "include/$f.inc" ] && [ ! -f "pawncc/include/$f.inc" ]; then
               echo "::warning::Нет include/$f.inc"
-              missing=1
             fi
           done
-          exit 0
 
       - name: Compile
         run: |
@@ -56,4 +51,3 @@ jobs:
         with:
           name: lonexs-amx
           path: build/lonexs.amx
-          
