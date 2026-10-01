@@ -27,19 +27,6 @@ jobs:
           mkdir pawncc
           tar -xzf pawncc.tar.gz -C pawncc --strip-components=1
 
-      - name: Download SA-MP standard includes
-        run: |
-          git clone --depth 1 https://github.com/pawn-lang/samp-stdlib.git std/samp
-          git clone --depth 1 https://github.com/pawn-lang/pawn-stdlib.git std/pawn
-
-      - name: Check required includes
-        run: |
-          for f in mxINI voicechat brnotification customhud customtune sampvoice pawnraknet; do
-            if [ ! -f "include/$f.inc" ]; then
-              echo "::warning::Нет include/$f.inc"
-            fi
-          done
-
       - name: Compile
         run: |
           export LD_LIBRARY_PATH="$PWD/pawncc/lib:$LD_LIBRARY_PATH"
@@ -48,9 +35,6 @@ jobs:
           ../pawncc/bin/pawncc lonexs.pwn \
             -o../build/lonexs.amx \
             -i../include \
-            -i../std/samp \
-            -i../std/pawn \
-            -i../pawncc/include \
             '-;+' '-(+' -d3
 
       - name: Upload artifact
