@@ -1,10 +1,14 @@
-name: Build lonexs
+name: Build gamemode
 
 on:
   push:
     branches: [main, master]
   pull_request:
   workflow_dispatch:
+
+env:
+  PAWNC_VERSION: "3.10.10"
+  GAMEMODE: icerussia
 
 jobs:
   build:
@@ -14,68 +18,47 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # pawncc для Linux 32-битный
       - name: Install 32-bit libs
         run: |
           sudo dpkg --add-architecture i386
           sudo apt-get update
-          sudo apt-get install -y libc6:i386
+          sudo apt-get install -y libc6:i386 libstdc++6:i386
 
-      - name: Download pawncc 3.10.10
+      - name: Download Pawn compiler
         run: |
-          curl -fL -o pawncc.tar.gz \
-            https://github.com/pawn-lang/compiler/releases/download/v3.10.10/pawnc-3.10.10-linux.tar.gz
-          mkdir pawncc
-          tar -xzf pawncc.tar.gz -C pawncc --strip-components=1
+          curl -fsSL -o pawnc.tar.gz \
+            "https://github.com/pawn-lang/compiler/releases/download/v${PAWNC_VERSION}/pawnc-${PAWNC_VERSION}-linux.tar.gz"
+          mkdir -p pawnc
+          tar -xzf pawnc.tar.gz -C pawnc --strip-components=1
 
-      - name: Insert DB credentials from secrets
-        env:
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-        run: |
-          python3 - <<'PY'
-          import os, re, sys
-          p = 'gamemodes/lonexs.pwn'
-          s = open(p, encoding='latin-1', newline='').read()
-          host = os.environ.get('DB_HOST') or '127.0.0.1'
-          user = os.environ.get('DB_USER', '')
-          db = os.environ.get('DB_NAME', '')
-          pw = os.environ.get('DB_PASSWORD', '')
-          if not (user and db and pw):
-              sys.exit('Нужны секреты DB_USER, DB_NAME, DB_PASSWORD')
-          def esc(x):
-              return x.replace('\\', '\\\\').replace('"', '\\"')
-          q = lambda x: '"' + esc(x) + '"'
-          total = 0
-          for name, val in (('LAIRD_HOST', host), ('LAIRD_USER', user),
-                            ('LAIRD_DB', db), ('LAIRD_PASSWORD', pw)):
-              pat = r'(#define\s+' + name + r'\s+)"[^"]*"'
-              s, n = re.subn(pat, lambda m: m.group(1) + q(val), s)
-              print(name, 'replaced:', n)
-              total += n
-          pat = r'mysql_connect\(\s*"[^"]*"\s*,\s*"[^"]*"\s*,\s*"[^"]*"\s*,\s*"[^"]*"\s*\)'
-          rep = 'mysql_connect(' + ', '.join(q(v) for v in (host, user, db, pw)) + ')'
-          s, n = re.subn(pat, lambda m: rep, s)
-          print('mysql_connect replaced:', n)
-          total += n
-          if total == 0:
-              sys.exit('Ничего не заменено')
-          open(p, 'w', encoding='latin-1', newline='').write(s)
-          PY
+      # В репозитории нет a_samp.inc и других стандартных инклудов
+      - name: Download SA-MP stdlib
+        run: git clone --depth 1 https://github.com/pawn-lang/samp-stdlib.git samp-stdlib
 
       - name: Compile
         run: |
-          export LD_LIBRARY_PATH="$PWD/pawncc/lib:$LD_LIBRARY_PATH"
           mkdir -p build
-          cd gamemodes
-          ../pawncc/bin/pawncc lonexs.pwn \
-            -o../build/lonexs.amx \
-            -i../include \
-            '-;+' '-(+' -d3
+          export LD_LIBRARY_PATH="$PWD/pawnc/lib:$LD_LIBRARY_PATH"
+          ./pawnc/bin/pawncc "gamemodes/${GAMEMODE}.pwn" \
+            -ogamemodes/${GAMEMODE}.amx \
+            -i"include" \
+            -i"samp-stdlib" \
+            -i"pawnc/include" \
+            -d3 -;+ -(+ \
+            | tee build/compile.log
+          test -f "gamemodes/${GAMEMODE}.amx"
 
-      - name: Upload artifact
+      - name: Upload AMX
         uses: actions/upload-artifact@v4
         with:
-          name: lonexs-amx
-          path: build/lonexs.amx
+          name: ${{ env.GAMEMODE }}-amx
+          path: gamemodes/${{ env.GAMEMODE }}.amx
+
+      - name: Upload compile log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compile-log
+          path: build/compile.log
+          
