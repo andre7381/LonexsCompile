@@ -45,8 +45,8 @@ jobs:
             -i"include" \
             -i"samp-stdlib" \
             -i"pawnc/include" \
-            -d3 -;+ -(+ \
-            | tee build/compile.log
+            -d3 '-;+' '-(+' \
+            2>&1 | tee build/compile.log
           test -f "gamemodes/${GAMEMODE}.amx"
 
       - name: Upload AMX
