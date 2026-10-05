@@ -1548,12 +1548,16 @@ stock Marketplace_OpenGUI(playerid)
 
 stock Marketplace_SendProfile(playerid)
 {
-    // Statistics on this screen are sold-items stats (marketplace_history,
-    // status=1), not the seller's currently-active listings (marketplace_lots).
-    new query[384];
+    // Statistics on this screen are sold-items stats (marketplace_history),
+    // not the seller's currently-active listings (marketplace_lots).
+    // status=2 is the SELLER's history entry (status=1 is the buyer's one).
+    // `price` holds the total sale price (price * amount) before tax, so revenue is
+    // the amount the seller actually received: price minus the marketplace tax,
+    // calculated exactly like Marketplace_ConfirmBuy does (integer math, per sale).
+    new query[512];
     mysql_format(mysql, query, sizeof(query),
-        "SELECT COUNT(*) AS sold_count, IFNULL(SUM(`price`*`amount`),0) AS total_revenue FROM `marketplace_history` WHERE `account_id`=%d AND `status`=1",
-        GetPlayerAccountID(playerid));
+        "SELECT IFNULL(SUM(`amount`),0) AS sold_count, IFNULL(SUM(`price` - ((`price` DIV 100) * %d + (((`price` MOD 100) * %d) DIV 100))),0) AS total_revenue FROM `marketplace_history` WHERE `account_id`=%d AND `status`=2",
+        MARKETPLACE_SELL_TAX, MARKETPLACE_SELL_TAX, GetPlayerAccountID(playerid));
     mysql_tquery(mysql, query, "Marketplace_OnProfileLoaded", "i", playerid);
     return 1;
 }
@@ -1570,13 +1574,19 @@ public Marketplace_OnProfileLoaded(playerid)
         total_revenue = cache_get_field_content_int(0, "total_revenue", mysql);
     }
 
-    // The player's own nickname/id are already known client-side; wrapping
-    // them into an "n" array (like the storefront product list) makes the
-    // client dump the raw array as text instead of a title. Profile is a
-    // flat set of fields only - no "n"/"dm"/"nm"/"id" here.
+    // Wrapping the nickname into an "n" array (like the storefront product list)
+    // makes the client dump the raw array as text, so the profile stays a flat
+    // set of fields. The client already knows the player id, but not the
+    // nickname: it is sent as the flat "nm" string (same key own items use).
+    new nickname[MAX_PLAYER_NAME];
+    format(nickname, sizeof(nickname), "%s", GetPlayerNameEx(playerid));
+
+    printf("[MARKET] profile player=%d acc=%d sold=%d revenue=%d nick=%s", playerid, GetPlayerAccountID(playerid), sold_count, total_revenue, nickname);
+
     new Node:json = JSON_Object();
     JSON_SetInt(json, "t", MP_TAB_PROFILE);
     JSON_SetInt(json, "m", GetPlayerMoneyEx(playerid));
+    JSON_SetString(json, "nm", nickname, sizeof(nickname));
     JSON_SetInt(json, "ct", sold_count);
     JSON_SetInt(json, "cs", total_revenue);
     Marketplace_Send(json, playerid);
