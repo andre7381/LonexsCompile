@@ -17,6 +17,13 @@
 // /setadmin доступен с этого уровня.
 #define SR_SETADMIN_MIN_LEVEL       (7)
 
+// Цвет сообщения выданному администратору (синий).
+#define SR_SETADMIN_COLOR_TARGET    (0x3399FFFF)
+// Размер префикса админа (P_PREFIX в icerussia.pwn и колонка accounts.prefix): 63 символа + терминатор.
+#define SR_PREFIX_SIZE              (64)
+// Цвет строк [A-LOGIN] (зелёный).
+#define SR_ALOGIN_COLOR             (0x33CC33FF)
+
 // Максимальный уровень, который может выдавать/менять администратор данного уровня:
 // 7 ур. - только 6 уровень; 8 ур. - до 7 уровня; 9+ ур. - до своего уровня включительно (как было раньше).
 stock SRSet_Max(actor_level)
@@ -137,6 +144,49 @@ stock SRSet_Sanitize(playerid)
     return 1;
 }
 
+// Расширить accounts.prefix до VARCHAR(SR_PREFIX_SIZE), сохранив кодировку/NULL/значение по умолчанию. Вызывается из CREATE_ACCOUNTS_TABLE.
+stock SRSet_EnsurePrefixColumn()
+{
+    new Cache:cache = mysql_query(mysql, "SHOW FULL COLUMNS FROM `accounts` LIKE 'prefix'", true);
+    if(!cache_num_rows())
+    {
+        cache_delete(cache);
+        return 0;
+    }
+    new type[32], collation[48], nullable[8], defval[96];
+    cache_get_field_content(0, "Type", type, mysql, sizeof type);
+    cache_get_field_content(0, "Collation", collation, mysql, sizeof collation);
+    cache_get_field_content(0, "Null", nullable, mysql, sizeof nullable);
+    cache_get_field_content(0, "Default", defval, mysql, sizeof defval);
+    cache_delete(cache);
+
+    // Type имеет вид "varchar(16)"; уже достаточно широкая колонка (или не varchar) не трогается.
+    new open = strfind(type, "(");
+    if(strfind(type, "varchar") != 0 || open < 0) return 0;
+    new width[8];
+    strmid(width, type, open + 1, strlen(type), sizeof width);
+    if(strval(width) >= SR_PREFIX_SIZE) return 1;
+
+    new query[320], extra[160];
+    if(strlen(collation) > 0 && strcmp(collation, "NULL", true)) format(extra, sizeof extra, " COLLATE %s", collation);
+    if(!strcmp(nullable, "YES", true)) strcat(extra, " NULL DEFAULT NULL", sizeof extra);
+    else
+    {
+        strcat(extra, " NOT NULL", sizeof extra);
+        if(strcmp(defval, "NULL", true))
+        {
+            new escaped[128];
+            mysql_format(mysql, escaped, sizeof escaped, " DEFAULT '%e'", defval);
+            strcat(extra, escaped, sizeof extra);
+        }
+    }
+    format(query, sizeof query, "ALTER TABLE `accounts` MODIFY `prefix` VARCHAR(%d)%s", SR_PREFIX_SIZE, extra);
+    mysql_query(mysql, query, false);
+    if(mysql_errno(mysql)) printf("[ADMIN] PREFIX_COLUMN_ALTER_FAILED errno=%d query=%s", mysql_errno(mysql), query);
+    else printf("[ADMIN] accounts.prefix widened to VARCHAR(%d)", SR_PREFIX_SIZE);
+    return 1;
+}
+
 // Применить уровень + должность. Права проверяются повторно (диалог мог устареть).
 stock SRSet_Apply(playerid, targetid, level, pos)
 {
@@ -155,7 +205,7 @@ stock SRSet_Apply(playerid, targetid, level, pos)
     if(old_level == level && old_pos == pos)
         return SendClientMessage(playerid, -1, "У игрока уже установлена эта должность.");
 
-    new query[384], rank_name[SR_ADMIN_POS_NAME_LEN], prefix[32], account = GetPlayerAccountID(targetid);
+    new query[384], rank_name[SR_ADMIN_POS_NAME_LEN], prefix[SR_PREFIX_SIZE], account = GetPlayerAccountID(targetid);
     format(rank_name, sizeof rank_name, "%s", g_SRAdminPos[pos - 1][SRP_NAME]);
     format(prefix, sizeof prefix, "%s", rank_name);
 
@@ -171,7 +221,7 @@ stock SRSet_Apply(playerid, targetid, level, pos)
         printf("[ADMIN] LEVEL_SAVE_FAILED actor=%d target=%d account=%d errno=%d affected=%d", playerid, targetid, account, error, affected);
         return SendClientMessage(playerid, 0xFF5533FF, "Не удалось сохранить должность. Изменения в игре не применены.");
     }
-    // Префикс - второй запрос: если колонка prefix короче названия, выдача всё равно состоялась.
+    // Префикс - вторым запросом: даже если он не сохранится, уровень и должность уже выданы.
     mysql_format(mysql, query, sizeof query, "UPDATE accounts SET prefix='%e' WHERE id=%d LIMIT 1", prefix, account);
     mysql_query(mysql, query, false);
     if(mysql_errno(mysql)) printf("[ADMIN] PREFIX_SAVE_FAILED target_account=%d errno=%d", account, mysql_errno(mysql));
@@ -182,15 +232,17 @@ stock SRSet_Apply(playerid, targetid, level, pos)
     g_SRAdminPosOf[targetid] = pos;
     SetPlayerData(targetid, P_ADMIN_LOGGED, 0);
     SetPlayerColorInit(targetid);
-    format(GetPlayerData(targetid, P_PREFIX), 32, "%s", prefix);
+    format(GetPlayerData(targetid, P_PREFIX), SR_PREFIX_SIZE, "%s", prefix);
     SRAdmin_ClearTarget(targetid);
     DeletePVar(targetid, "SRAdmPinStep");
 
+    // Выданному - синее сообщение, действующим администраторам - уведомление о назначении.
     new message[192];
-    format(message, sizeof message, "[A] %s[%d] изменил должность %s[%d]: %d -> %d ур. (%s)",
-        GetPlayerNameEx(playerid), playerid, GetPlayerNameEx(targetid), targetid, old_level, level, rank_name);
+    format(message, sizeof message, "%s[%d] назначил Вас администратором (%s).", GetPlayerNameEx(playerid), playerid, rank_name);
+    SendClientMessage(targetid, SR_SETADMIN_COLOR_TARGET, message);
+    format(message, sizeof message, "Администратор %s[%d] назначил %s[%d] на пост Администратора (%s)",
+        GetPlayerNameEx(playerid), playerid, GetPlayerNameEx(targetid), targetid, rank_name);
     SendMessageToAdmins(message, 0xFF5533FF);
-    SendClientMessage(targetid, 0xFF5533FF, message);
     printf("[ADMIN] LEVEL_CHANGED actor=%d actor_account=%d target=%d target_account=%d old=%d new=%d pos=%d",
         playerid, GetPlayerAccountID(playerid), targetid, account, old_level, level, pos);
 
@@ -406,4 +458,86 @@ stock SRSet_Response(playerid, dialogid, response, listitem)
     if(listitem < 0 || idx < 0) return SRSet_ShowPositions(playerid, level);
     SRSet_Clear(playerid);
     return SRSet_Apply(playerid, targetid, level, idx + 1);
+}
+
+// ---------------------------------------------------------------------------------------------
+// Ввод админ-пароля (PIN): замена SRAdmin_PinResponse из admin_skarf_core.inc.
+// В icerussia.pwn оригинал переименован макросом (SRAdmin_PinResponse -> SRAdmin_PinResponse_Legacy) на время подключения core.
+// Отличие от оригинала только в сообщениях после успешного входа:
+//   - вошедшему:        [A-LOGIN]: Вы авторизовались как: "Префикс".
+//   - всем админам в сети, включая вошедшего: [A-LOGIN]: Nick[id] авторизовался как "Префикс".
+//     (вошедший видит обе строки, остальные - только вторую)
+// (Префикс - тот, что поставил /setadmin: название должности.)
+// Никаких других строк (IP и т.п.) не отправляется.
+// ---------------------------------------------------------------------------------------------
+stock SRAdmin_PinResponse(playerid, dialogid, response, const inputtext[])
+{
+    if(!IsPlayerLogged(playerid) || !SRAdmin_Level(playerid)) return 1;
+    if(GetPlayerData(playerid, P_ADMIN_LOGGED) || GetPVarInt(playerid, "SRAdmPinBlocked")) return 1;
+    new expected = (dialogid == DIALOG_ADMIN_REG) ? 1 : 2;
+    if(GetPVarInt(playerid, "SRAdmPinStep") != expected) return 1;
+    DeletePVar(playerid, "SRAdmPinStep");
+    if(!response) return 1;
+    new length = strlen(inputtext), numeric = length == 4;
+    for(new i; i < length; i++)
+        if(inputtext[i] < '0' || inputtext[i] > '9') numeric = 0;
+
+    if(expected == 1)
+    {
+        if(GetPlayerData(playerid, P_APASS) != 0) return 1;
+        if(!numeric || length != 4 || strval(inputtext) < 1000)
+        {
+            SendClientMessage(playerid, 0xFF5533FF, "Административный пароль должен состоять из 4 цифр: от 1000 до 9999.");
+            return SRAdmin_ShowLogin(playerid);
+        }
+        new query[192];
+        mysql_format(mysql, query, sizeof query,
+            "UPDATE accounts SET AdminPass=%d WHERE id=%d AND AdminPass=0 AND admin=%d LIMIT 1",
+            strval(inputtext), GetPlayerAccountID(playerid), GetPlayerAdminEx(playerid));
+        new Cache:result = mysql_query(mysql, query);
+        new error = mysql_errno(mysql);
+        new affected = error ? 0 : cache_affected_rows(mysql);
+        if(result != Cache:0) cache_delete(result, mysql);
+        if(error || affected != 1)
+        {
+            printf("[ADMIN] PIN_SAVE_FAILED player=%d account=%d errno=%d affected=%d", playerid, GetPlayerAccountID(playerid), error, affected);
+            SendClientMessage(playerid, 0xFF5533FF, "Не удалось сохранить административный пароль. Повторите вход.");
+            return 1;
+        }
+        SetPlayerData(playerid, P_APASS, strval(inputtext));
+        return SRAdmin_ShowLogin(playerid);
+    }
+
+    if(!numeric || GetPlayerData(playerid, P_APASS) == 0 || strval(inputtext) != GetPlayerData(playerid, P_APASS))
+    {
+        new attempts = GetPVarInt(playerid, "SRAdmPinAttempts") + 1;
+        SetPVarInt(playerid, "SRAdmPinAttempts", attempts);
+        printf("[ADMIN] LOGIN_FAILED player=%d account=%d attempt=%d", playerid, GetPlayerAccountID(playerid), attempts);
+        if(attempts >= 3)
+        {
+            SetPVarInt(playerid, "SRAdmPinBlocked", 1);
+            return FixKick(playerid);
+        }
+        SendClientMessage(playerid, 0xFF5533FF, "Неверный административный пароль.");
+        return SRAdmin_ShowLogin(playerid);
+    }
+
+    DeletePVar(playerid, "SRAdmPinAttempts");
+    SetPlayerData(playerid, P_ADMIN_LOGGED, 1);
+    RefreshAdminBadge(playerid);
+
+    // В строках входа показывается префикс, выставленный в /setadmin (или изменённый потом через /prefix); если пуст - название должности.
+    new rank[SR_PREFIX_SIZE + 8], message[192];
+    format(rank, sizeof rank, "%s", GetPlayerData(playerid, P_PREFIX));
+    if(!strlen(rank)) SRSet_RankNameFor(playerid, rank, sizeof rank);
+    format(message, sizeof message, "[A-LOGIN]: Вы авторизовались как: \"{66FF66}%s{33CC33}\".", rank);
+    SendClientMessage(playerid, SR_ALOGIN_COLOR, message);
+    format(message, sizeof message, "[A-LOGIN]: %s[%d] авторизовался как \"{66FF66}%s{33CC33}\".", GetPlayerNameEx(playerid), playerid, rank);
+    foreach(new i : Player)
+    {
+        if(!IsPlayerLogged(i) || GetPlayerAdminEx(i) <= 0 || !GetPlayerData(i, P_ADMIN_LOGGED)) continue;
+        SendClientMessage(i, SR_ALOGIN_COLOR, message);
+    }
+    printf("[ADMIN] LOGIN_SUCCESS player=%d account=%d level=%d pos=%d", playerid, GetPlayerAccountID(playerid), SRAdmin_Level(playerid), g_SRAdminPosOf[playerid]);
+    return 1;
 }
